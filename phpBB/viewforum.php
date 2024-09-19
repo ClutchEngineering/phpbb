@@ -47,28 +47,30 @@ if (!$forum_id)
 	trigger_error('NO_FORUM');
 }
 
+$sql_array = array(
+	'SELECT'	=> "f.*",
+	'FROM'		=> array(
+		FORUMS_TABLE		=> 'f'
+	),
+	'WHERE'		=> 'f.forum_id = ' . $forum_id,
+	'LEFT_JOIN'	=> array(),
+);
+
 $sql_from = FORUMS_TABLE . ' f';
 $lastread_select = '';
 
 // Grab appropriate forum data
 if ($config['load_db_lastread'] && $user->data['is_registered'])
 {
-	$sql_from .= ' LEFT JOIN ' . FORUMS_TRACK_TABLE . ' ft ON (ft.user_id = ' . $user->data['user_id'] . '
-		AND ft.forum_id = f.forum_id)';
-	$lastread_select .= ', ft.mark_time';
+	$sql_array['LEFT_JOIN'][] = array('FROM' => array(FORUMS_TRACK_TABLE => 'ft'), 'ON' => '(ft.user_id = ' . $user->data['user_id'] . 'AND ft.forum_id = f.forum_id)');
+	$sql_array['SELECT'] .= ', ft.mark_time';
 }
 
 if ($user->data['is_registered'])
 {
-	$sql_from .= ' LEFT JOIN ' . FORUMS_WATCH_TABLE . ' fw ON (fw.forum_id = f.forum_id AND fw.user_id = ' . $user->data['user_id'] . ')';
-	$lastread_select .= ', fw.notify_status';
+	$sql_array['LEFT_JOIN'][] = array('FROM' => array(FORUMS_WATCH_TABLE => 'fw'), 'ON' => '(fw.forum_id = f.forum_id AND fw.user_id = ' . $user->data['user_id'] . ')');
+	$sql_array['SELECT'] .= ', fw.notify_status';
 }
-
-$sql_array = array(
-	'SELECT'	=> "f.* $lastread_select",
-	'FROM'		=> $sql_from,
-	'WHERE'		=> 't.forum_id = ' . $forum_id,
-);
 
 /**
 * You can use this event to modify the sql used to select the forum on the viewforum page.
