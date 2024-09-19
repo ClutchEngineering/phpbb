@@ -62,13 +62,13 @@ $lastread_select = '';
 // Grab appropriate forum data
 if ($config['load_db_lastread'] && $user->data['is_registered'])
 {
-	$sql_array['LEFT_JOIN'][] = array('FROM' => array(FORUMS_TRACK_TABLE => 'ft'), 'ON' => '(ft.user_id = ' . $user->data['user_id'] . 'AND ft.forum_id = f.forum_id)');
+	$sql_array['LEFT_JOIN'][] = array('FROM' => array(FORUMS_TRACK_TABLE => 'ft'), 'ON' => 'ft.user_id = ' . $user->data['user_id'] . ' AND ft.forum_id = f.forum_id');
 	$sql_array['SELECT'] .= ', ft.mark_time';
 }
 
 if ($user->data['is_registered'])
 {
-	$sql_array['LEFT_JOIN'][] = array('FROM' => array(FORUMS_WATCH_TABLE => 'fw'), 'ON' => '(fw.forum_id = f.forum_id AND fw.user_id = ' . $user->data['user_id'] . ')');
+	$sql_array['LEFT_JOIN'][] = array('FROM' => array(FORUMS_WATCH_TABLE => 'fw'), 'ON' => 'fw.forum_id = f.forum_id AND fw.user_id = ' . $user->data['user_id']);
 	$sql_array['SELECT'] .= ', fw.notify_status';
 }
 
