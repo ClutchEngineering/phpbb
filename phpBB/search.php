@@ -248,16 +248,6 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		),
 		'ORDER_BY' => 'f.left_id'
 	);
-
-	/**
-	* You can use this event to modify the sql used to select the set of forums that are searchable.
-	*
-	* @event core.search_modify_sql
-	* @var array	sql_ary		The SQL array to get the data of all topics
-	* @since 3.2.2-RC1
-	*/
-	$vars = array('sql_ary');
-	extract($phpbb_dispatcher->trigger_event('core.search_modify_sql', compact($vars)));
 	$result = $db->sql_query($db->sql_build_query('SELECT', $sql_ary));
 
 	$right_id = 0;
