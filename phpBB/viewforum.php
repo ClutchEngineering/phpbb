@@ -64,10 +64,22 @@ if ($user->data['is_registered'])
 	$lastread_select .= ', fw.notify_status';
 }
 
-$sql = "SELECT f.* $lastread_select
-	FROM $sql_from
-	WHERE f.forum_id = $forum_id";
-$result = $db->sql_query($sql);
+$sql_array = array(
+	'SELECT'	=> "f.* $lastread_select",
+	'FROM'		=> $sql_from,
+	'WHERE'		=> 't.forum_id = ' . $forum_id,
+);
+
+/**
+* You can use this event to modify the sql used to select the forum on the viewforum page.
+*
+* @event core.viewforum_modify_sql
+* @var array	sql_array		The SQL array to get the data of all topics
+* @since 3.2.2-RC1
+*/
+$vars = array('sql_array');
+extract($phpbb_dispatcher->trigger_event('core.viewforum_modify_sql', compact($vars)));
+$result = $db->sql_query($db->sql_build_query('SELECT', $sql_array));
 $forum_data = $db->sql_fetchrow($result);
 $db->sql_freeresult($result);
 
