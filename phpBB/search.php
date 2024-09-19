@@ -234,15 +234,31 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		$ex_fid_ary = array_unique(array_merge(array_keys($auth->acl_getf('!f_read', true)), array_keys($auth->acl_getf('!f_search', true))));
 	}
 
-	$not_in_fid = (count($ex_fid_ary)) ? 'WHERE ' . $db->sql_in_set('f.forum_id', $ex_fid_ary, true) . " OR (f.forum_password <> '' AND fa.user_id <> " . (int) $user->data['user_id'] . ')' : "";
+	$sql_ary = array(
+		'SELECT'	=> "f.forum_id, f.forum_name, f.parent_id, f.forum_type, f.right_id, f.forum_password, f.forum_flags, fa.user_id",
+		'FROM'		=> array(
+			FORUMS_TABLE		=> 'f'
+		),
+		'WHERE'		=> (count($ex_fid_ary)) ? $db->sql_in_set('f.forum_id', $ex_fid_ary, true) . " OR (f.forum_password <> '' AND fa.user_id <> " . (int) $user->data['user_id'] . ')' : "",
+		'LEFT_JOIN'	=> array(
+			array(
+				'FROM' => array(FORUMS_ACCESS_TABLE => 'fa'),
+				'ON' => 'fa.forum_id = f.forum_id AND fa.session_id = ' . $db->sql_escape($user->session_id)
+			)
+		),
+		'ORDER_BY' => 'f.left_id'
+	);
 
-	$sql = 'SELECT f.forum_id, f.forum_name, f.parent_id, f.forum_type, f.right_id, f.forum_password, f.forum_flags, fa.user_id
-		FROM ' . FORUMS_TABLE . ' f
-		LEFT JOIN ' . FORUMS_ACCESS_TABLE . " fa ON (fa.forum_id = f.forum_id
-			AND fa.session_id = '" . $db->sql_escape($user->session_id) . "')
-		$not_in_fid
-		ORDER BY f.left_id";
-	$result = $db->sql_query($sql);
+	/**
+	* You can use this event to modify the sql used to select the set of forums that are searchable.
+	*
+	* @event core.search_modify_sql
+	* @var array	sql_ary		The SQL array to get the data of all topics
+	* @since 3.2.2-RC1
+	*/
+	$vars = array('sql_ary');
+	extract($phpbb_dispatcher->trigger_event('core.search_modify_sql', compact($vars)));
+	$result = $db->sql_query($db->sql_build_query('SELECT', $sql_ary));
 
 	$right_id = 0;
 	$reset_search_forum = true;
