@@ -234,21 +234,15 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		$ex_fid_ary = array_unique(array_merge(array_keys($auth->acl_getf('!f_read', true)), array_keys($auth->acl_getf('!f_search', true))));
 	}
 
-	$sql_ary = array(
-		'SELECT'	=> "f.forum_id, f.forum_name, f.parent_id, f.forum_type, f.right_id, f.forum_password, f.forum_flags, fa.user_id",
-		'FROM'		=> array(
-			FORUMS_TABLE		=> 'f'
-		),
-		'WHERE'		=> (count($ex_fid_ary)) ? '(' . $db->sql_in_set('f.forum_id', $ex_fid_ary, true) . " OR (f.forum_password <> '' AND fa.user_id <> " . (int) $user->data['user_id'] . '))' : "",
-		'LEFT_JOIN'	=> array(
-			array(
-				'FROM' => array(FORUMS_ACCESS_TABLE => 'fa'),
-				'ON' => "fa.forum_id = f.forum_id AND fa.session_id = '" . $db->sql_escape($user->session_id) . "'"
-			)
-		),
-		'ORDER_BY' => 'f.left_id'
-	);
-	$result = $db->sql_query($db->sql_build_query('SELECT', $sql_ary));
+	$not_in_fid = (count($ex_fid_ary)) ? 'WHERE ' . $db->sql_in_set('f.forum_id', $ex_fid_ary, true) . " OR (f.forum_password <> '' AND fa.user_id <> " . (int) $user->data['user_id'] . ')' : "";
+
+	$sql = 'SELECT f.forum_id, f.forum_name, f.parent_id, f.forum_type, f.right_id, f.forum_password, f.forum_flags, fa.user_id
+		FROM ' . FORUMS_TABLE . ' f
+		LEFT JOIN ' . FORUMS_ACCESS_TABLE . " fa ON (fa.forum_id = f.forum_id
+			AND fa.session_id = '" . $db->sql_escape($user->session_id) . "')
+		$not_in_fid
+		ORDER BY f.left_id";
+	$result = $db->sql_query($sql);
 
 	$right_id = 0;
 	$reset_search_forum = true;
