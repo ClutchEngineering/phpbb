@@ -243,7 +243,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		'LEFT_JOIN'	=> array(
 			array(
 				'FROM' => array(FORUMS_ACCESS_TABLE => 'fa'),
-				'ON' => 'fa.forum_id = f.forum_id AND fa.session_id = ' . $db->sql_escape($user->session_id)
+				'ON' => "fa.forum_id = f.forum_id AND fa.session_id = '" . $db->sql_escape($user->session_id) . "'"
 			)
 		),
 		'ORDER_BY' => 'f.left_id'
