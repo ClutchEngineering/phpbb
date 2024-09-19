@@ -238,10 +238,10 @@ if (!$post_id)
 }
 else
 {
-	$sql_ary['WHERE'] = "p.post_id = $post_id AND t.topic_id = p.topic_id";
+	$sql_ary['WHERE'] = "(p.post_id = $post_id AND t.topic_id = p.topic_id)";
 }
 
-$sql_ary['WHERE'] .= ' AND f.forum_id = t.forum_id';
+$sql_ary['WHERE'] = '(' . $sql_ary['WHERE'] .') AND f.forum_id = t.forum_id';
 
 $vars = array('sql_ary');
 extract($phpbb_dispatcher->trigger_event('core.viewtopic_modify_sql', compact($vars)));

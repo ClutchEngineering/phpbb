@@ -239,7 +239,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		'FROM'		=> array(
 			FORUMS_TABLE		=> 'f'
 		),
-		'WHERE'		=> (count($ex_fid_ary)) ? $db->sql_in_set('f.forum_id', $ex_fid_ary, true) . " OR (f.forum_password <> '' AND fa.user_id <> " . (int) $user->data['user_id'] . ')' : "",
+		'WHERE'		=> (count($ex_fid_ary)) ? '(' . $db->sql_in_set('f.forum_id', $ex_fid_ary, true) . " OR (f.forum_password <> '' AND fa.user_id <> " . (int) $user->data['user_id'] . '))' : "",
 		'LEFT_JOIN'	=> array(
 			array(
 				'FROM' => array(FORUMS_ACCESS_TABLE => 'fa'),
