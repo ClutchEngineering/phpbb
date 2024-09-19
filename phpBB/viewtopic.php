@@ -181,7 +181,7 @@ if ($view && !$post_id)
 // This rather complex gaggle of code handles querying for topics but
 // also allows for direct linking to a post (and the calculation of which
 // page the post is on and the correct display of viewtopic)
-$sql_array = array(
+$sql_ary = array(
 	'SELECT'	=> 't.*, f.*',
 
 	'FROM'		=> array(FORUMS_TABLE => 'f'),
@@ -190,27 +190,27 @@ $sql_array = array(
 // The FROM-Order is quite important here, else t.* columns can not be correctly bound.
 if ($post_id)
 {
-	$sql_array['SELECT'] .= ', p.post_visibility, p.post_time, p.post_id';
-	$sql_array['FROM'][POSTS_TABLE] = 'p';
+	$sql_ary['SELECT'] .= ', p.post_visibility, p.post_time, p.post_id';
+	$sql_ary['FROM'][POSTS_TABLE] = 'p';
 }
 
 // Topics table need to be the last in the chain
-$sql_array['FROM'][TOPICS_TABLE] = 't';
+$sql_ary['FROM'][TOPICS_TABLE] = 't';
 
 if ($user->data['is_registered'])
 {
-	$sql_array['SELECT'] .= ', tw.notify_status';
-	$sql_array['LEFT_JOIN'] = array();
+	$sql_ary['SELECT'] .= ', tw.notify_status';
+	$sql_ary['LEFT_JOIN'] = array();
 
-	$sql_array['LEFT_JOIN'][] = array(
+	$sql_ary['LEFT_JOIN'][] = array(
 		'FROM'	=> array(TOPICS_WATCH_TABLE => 'tw'),
 		'ON'	=> 'tw.user_id = ' . $user->data['user_id'] . ' AND t.topic_id = tw.topic_id'
 	);
 
 	if ($config['allow_bookmarks'])
 	{
-		$sql_array['SELECT'] .= ', bm.topic_id as bookmarked';
-		$sql_array['LEFT_JOIN'][] = array(
+		$sql_ary['SELECT'] .= ', bm.topic_id as bookmarked';
+		$sql_ary['LEFT_JOIN'][] = array(
 			'FROM'	=> array(BOOKMARKS_TABLE => 'bm'),
 			'ON'	=> 'bm.user_id = ' . $user->data['user_id'] . ' AND t.topic_id = bm.topic_id'
 		);
@@ -218,14 +218,14 @@ if ($user->data['is_registered'])
 
 	if ($config['load_db_lastread'])
 	{
-		$sql_array['SELECT'] .= ', tt.mark_time, ft.mark_time as forum_mark_time';
+		$sql_ary['SELECT'] .= ', tt.mark_time, ft.mark_time as forum_mark_time';
 
-		$sql_array['LEFT_JOIN'][] = array(
+		$sql_ary['LEFT_JOIN'][] = array(
 			'FROM'	=> array(TOPICS_TRACK_TABLE => 'tt'),
 			'ON'	=> 'tt.user_id = ' . $user->data['user_id'] . ' AND t.topic_id = tt.topic_id'
 		);
 
-		$sql_array['LEFT_JOIN'][] = array(
+		$sql_ary['LEFT_JOIN'][] = array(
 			'FROM'	=> array(FORUMS_TRACK_TABLE => 'ft'),
 			'ON'	=> 'ft.user_id = ' . $user->data['user_id'] . ' AND t.forum_id = ft.forum_id'
 		);
@@ -234,17 +234,18 @@ if ($user->data['is_registered'])
 
 if (!$post_id)
 {
-	$sql_array['WHERE'] = "t.topic_id = $topic_id";
+	$sql_ary['WHERE'] = "t.topic_id = $topic_id";
 }
 else
 {
-	$sql_array['WHERE'] = "p.post_id = $post_id AND t.topic_id = p.topic_id";
+	$sql_ary['WHERE'] = "p.post_id = $post_id AND t.topic_id = p.topic_id";
 }
 
-$sql_array['WHERE'] .= ' AND f.forum_id = t.forum_id';
+$sql_ary['WHERE'] .= ' AND f.forum_id = t.forum_id';
 
-$sql = $db->sql_build_query('SELECT', $sql_array);
-$result = $db->sql_query($sql);
+$vars = array('sql_ary');
+extract($phpbb_dispatcher->trigger_event('core.viewtopic_modify_sql', compact($vars)));
+$result = $db->sql_query($db->sql_build_query('SELECT', $sql_ary));
 $topic_data = $db->sql_fetchrow($result);
 $db->sql_freeresult($result);
 
